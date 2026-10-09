@@ -1,0 +1,48 @@
+name: Build V5.suprx
+
+on:
+  push:
+    branches: [main, master]
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container: vitasdk/vitasdk:latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Remettre les vrais noms de fichiers
+        shell: bash
+        run: |
+          # "main 2.c" -> "main.c", etc. Ne remplace JAMAIS un fichier déjà présent (-n)
+          for f in *\ 2.*; do
+            [ -e "$f" ] || continue
+            mv -n "$f" "${f% 2.*}.${f##* 2.}"
+          done
+          ls -l
+
+      - name: Compiler
+        run: |
+          cmake -S . -B build
+          cmake --build build
+
+      - name: Vérifier le .suprx
+        run: ls -l build/V5.suprx
+
+      - name: Publier le .suprx
+        uses: actions/upload-artifact@v4
+        with:
+          name: V5-suprx
+          path: build/V5.suprx
+
+      - name: Release (sur tag vX.Y)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: build/V5.suprx
