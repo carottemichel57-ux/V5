@@ -544,6 +544,8 @@ static void run_item(item_t *it, int restore) {
 }
 
 static void sd_reload(void);
+static void uc_load(void);
+static int sd_quiet;
 static int sd_done = 0;
 
 static void tick(void) {
